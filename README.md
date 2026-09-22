@@ -7,8 +7,7 @@ both instantaneous speeding at a camera and average-speed violations between
 cameras; violations are merged per car per day into MongoDB; and a Plotly /
 Folium dashboard re-queries Mongo every few seconds.
 
-Built for FIT3182 (Big Data Management and Processing) at Monash University,
-Semester 1 2026, as a pair assignment. Haruto Iriyama.
+Built by Haruto Iriyama as a two-person university project.
 
 ## Architecture
 
@@ -35,7 +34,7 @@ camera_event_C.csv ─▶ producer_c.ipynb ─▶ Kafka topic camera-events-C �
 | `src/producer_a.ipynb`, `producer_b.ipynb`, `producer_c.ipynb` | Replay one camera's CSV into its Kafka topic, one batch every *n* seconds |
 | `src/data_design_streaming.ipynb` | MongoDB data model, collections and indexes (§1–4); Spark streaming, joins, violation rules and Mongo sink (§5–11) |
 | `src/visualisation.ipynb` | Live dashboard polling MongoDB |
-| `data/` | Course-provided CSVs — see [`data/README.md`](data/README.md); not committed |
+| `data/` | Input CSVs — see [`data/README.md`](data/README.md); not committed |
 
 ## Design decisions
 
@@ -70,7 +69,7 @@ camera_event_C.csv ─▶ producer_c.ipynb ─▶ Kafka topic camera-events-C �
 pip install pyspark kafka-python pymongo pandas numpy plotly folium ipywidgets
 ```
 
-`kafka-python` is fine on most installs. If the lab image ships the broken legacy `kafka` PyPI package (whose `simple.py` contains `self.async` and parse-errors on Python 3.7+), every producer notebook automatically falls back to `kafka3` (the maintained fork). To pre-install it:
+`kafka-python` is fine on most installs. If your environment ships the broken legacy `kafka` PyPI package (whose `simple.py` contains `self.async` and parse-errors on Python 3.7+), every producer notebook automatically falls back to `kafka3` (the maintained fork). To pre-install it:
 
 ```bash
 pip install kafka3
@@ -128,7 +127,7 @@ Using a single hardcoded variable in each notebook ensures that the Kafka produc
 
 > Order matters. Start the streaming consumer before the producers, so Spark's join state begins empty and consumes fresh events.
 
-1. Start infrastructure — bring up the Kafka + MongoDB containers (the docker-compose stack from the Week 9 / Week 10 labs is fine).
+1. Start infrastructure — bring up the Kafka + MongoDB containers (any docker-compose stack that exposes both is fine).
    - Kafka broker reachable at `${AWAS_HOST}:9092`.
    - MongoDB reachable at `mongodb://${AWAS_HOST}:27017`.
 2. Open `src/data_design_streaming.ipynb` and run all cells top-to-bottom.
@@ -182,7 +181,7 @@ To stop cleanly, interrupt the producer notebooks first, then run `query.stop()`
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | Producer / streaming / viz raise `ConnectionRefusedError` to Kafka or Mongo | `AWAS_HOST` is wrong | Set `export AWAS_HOST=<correct host IP>` and restart the Jupyter kernel |
-| Producer fails on `from kafka import KafkaProducer` with `SyntaxError: self.async` | Lab image shipped the broken legacy `kafka` PyPI package | The producer already falls back to `kafka3` automatically — install it: `pip install kafka3` |
+| Producer fails on `from kafka import KafkaProducer` with `SyntaxError: self.async` | The broken legacy `kafka` PyPI package is installed | The producer already falls back to `kafka3` automatically — install it: `pip install kafka3` |
 | Streaming notebook hangs on Kafka read with no events | Spark Kafka connector version mismatch | We pin the JAR coordinate to `pyspark.__version__` automatically; if Spark itself is older than 3.3 the connector may not exist — upgrade PySpark |
 | Visualisation says `No violations in MongoDB yet` but I started the producers | Either Spark is not running, or it can't reach Kafka | Run the §0 sanity-check cell — it lists the four things to check, in order |
 | Visualisation displays the header but no plots appear under `clear_output` refresh | Plotly JS mount not re-attached after `clear_output` | Already fixed — `pio.renderers.default = 'notebook_connected'` is set in cell 1 |
@@ -197,7 +196,7 @@ To stop cleanly, interrupt the producer notebooks first, then run `query.stop()`
 - The vehicle CSV header `vechicle_type` is a typo kept as-is in the source file, renamed to `vehicle_type` after ingest.
 - Producer A → camera_id 1, Producer B → camera_id 2, Producer C → camera_id 3 (consistent with `camera.csv` and observed in the event CSVs).
 - Same `batch_id` across producers is not required to align in event time. We do not join on `batch_id`; we do a true online stream-stream join on event-time + watermark.
-- Duplicate `car_plate` rows in `vehicle.csv` are kept; the most recently registered row wins on lookup, matching the lecturer's brief about ownership changes.
+- Duplicate `car_plate` rows in `vehicle.csv` are kept; the most recently registered row wins on lookup, to model ownership changes.
 - "Online join" is a stream-stream (unbounded) join, not a stream-static join.
 - Daily aggregation key is the civil date of the start timestamp of the violation, naive UTC (matches the timestamp format in the source CSVs).
 - The Haversine formula is used to compute segment distances from `camera.csv` lat/lon — accurate to a few metres at sub-100 km distances; never hardcoded.

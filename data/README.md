@@ -1,6 +1,6 @@
 # Data
 
-The notebooks expect the course-provided AWAS dataset here (not committed —
+The notebooks expect the AWAS sample dataset here (not committed —
 ~145 MB of CSV):
 
 | File | Contents |
