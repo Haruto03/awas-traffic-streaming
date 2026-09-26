@@ -11,6 +11,11 @@ Folium dashboard re-queries Mongo every few seconds.
 
 Built by Haruto Iriyama as a two-person university project.
 
+![The live dashboard: violations per hour against average speed with p50/p90/p95 bands, the instantaneous-versus-average split over time, violations per camera, and average-speed violations per road segment](docs/dashboard.png)
+
+<sub>The dashboard on a completed run — 4,004 violations over 2,765 unique cars,
+3,582 of them instantaneous and 422 average-speed.</sub>
+
 ## Architecture
 
 ```
