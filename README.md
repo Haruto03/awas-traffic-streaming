@@ -1,5 +1,7 @@
 # AWAS point-to-point traffic monitoring — Kafka, Spark Structured Streaming, MongoDB
 
+English | [日本語](README.ja.md)
+
 A real-time speed-violation pipeline modelled on Malaysia's AWAS
 (Automated Awareness Safety System). Three roadside cameras stream vehicle
 sightings into Kafka; Spark Structured Streaming joins the streams to detect
